@@ -149,3 +149,16 @@ body {
     transform: scale(1.03);
     transition: 0.2s;
 }
+.movie-info {
+    color: #999;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.movie-card {
+    transition: transform 0.2s;
+}
+
+.movie-card:hover {
+    transform: scale(1.03);
+}

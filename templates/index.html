@@ -2,8 +2,11 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>StreamFlix</title>
 
@@ -11,7 +14,9 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/style.css') }}"
     >
+
 </head>
+
 
 <body>
 
@@ -22,9 +27,19 @@
         </div>
 
         <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/movies">Movies</a>
-            <a href="/login">Login</a>
+
+            <a href="/">
+                Home
+            </a>
+
+            <a href="/movies">
+                Movies
+            </a>
+
+            <a href="/login">
+                Login
+            </a>
+
         </div>
 
     </nav>
@@ -70,37 +85,27 @@
 
         <section class="movie-section">
 
-            <h2>Popular Movies</h2>
+            <h2>
+                Popular Movies
+            </h2>
 
-            <div class="movie-grid">
-
-                <div class="movie-card">
-                    <div class="poster">MOVIE 1</div>
-                    <h3>The Beginning</h3>
-                </div>
-
-                <div class="movie-card">
-                    <div class="poster">MOVIE 2</div>
-                    <h3>Dark Horizon</h3>
-                </div>
-
-                <div class="movie-card">
-                    <div class="poster">MOVIE 3</div>
-                    <h3>Last Mission</h3>
-                </div>
-
-                <div class="movie-card">
-                    <div class="poster">MOVIE 4</div>
-                    <h3>Beyond Earth</h3>
-                </div>
-
+            <div
+                id="movie-grid"
+                class="movie-grid"
+            >
+                <p>
+                    Loading movies...
+                </p>
             </div>
 
         </section>
 
     </main>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <script
+        src="{{ url_for('static', filename='js/app.js') }}">
+    </script>
 
 </body>
 

@@ -1,0 +1,52 @@
+services:
+
+  mysql:
+
+    image: mysql:8.0
+
+    container_name: streamflix-mysql
+
+    restart: unless-stopped
+
+    environment:
+
+      MYSQL_ROOT_PASSWORD: root_password
+
+      MYSQL_DATABASE: streamflix
+
+      MYSQL_USER: streamflix
+
+      MYSQL_PASSWORD: streamflix_password
+
+    ports:
+
+      - "3306:3306"
+
+    volumes:
+
+      - mysql_data:/var/lib/mysql
+
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    healthcheck:
+
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "streamflix",
+          "-pstreamflix_password"
+        ]
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+volumes:
+
+  mysql_data:
