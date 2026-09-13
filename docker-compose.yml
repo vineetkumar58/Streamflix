@@ -26,8 +26,6 @@ services:
 
       - mysql_data:/var/lib/mysql
 
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-
     healthcheck:
 
       test:
@@ -43,7 +41,9 @@ services:
         ]
 
       interval: 5s
+
       timeout: 5s
+
       retries: 10
 
 
