@@ -1,5 +1,10 @@
 services:
 
+
+  # ==========================================================
+  # MYSQL
+  # ==========================================================
+
   mysql:
 
     image: mysql:8.0
@@ -18,10 +23,6 @@ services:
 
       MYSQL_PASSWORD: streamflix_password
 
-    ports:
-
-      - "3306:3306"
-
     volumes:
 
       - mysql_data:/var/lib/mysql
@@ -36,17 +37,153 @@ services:
           "-h",
           "localhost",
           "-u",
-          "streamflix",
-          "-pstreamflix_password"
+          "root",
+          "-proot_password"
         ]
 
       interval: 5s
 
       timeout: 5s
 
-      retries: 10
+      retries: 20
 
+
+  # ==========================================================
+  # FLASK SERVER 1
+  # ==========================================================
+
+  app1:
+
+    build: .
+
+    container_name: streamflix-app1
+
+    restart: unless-stopped
+
+    environment:
+
+      SERVER_ID: SERVER-1
+
+      DB_HOST: mysql
+
+      DB_PORT: 3306
+
+      DB_USER: streamflix
+
+      DB_PASSWORD: streamflix_password
+
+      DB_NAME: streamflix
+
+      SECRET_KEY: streamflix-development-secret
+
+    depends_on:
+
+      mysql:
+        condition: service_healthy
+
+
+  # ==========================================================
+  # FLASK SERVER 2
+  # ==========================================================
+
+  app2:
+
+    build: .
+
+    container_name: streamflix-app2
+
+    restart: unless-stopped
+
+    environment:
+
+      SERVER_ID: SERVER-2
+
+      DB_HOST: mysql
+
+      DB_PORT: 3306
+
+      DB_USER: streamflix
+
+      DB_PASSWORD: streamflix_password
+
+      DB_NAME: streamflix
+
+      SECRET_KEY: streamflix-development-secret
+
+    depends_on:
+
+      mysql:
+        condition: service_healthy
+
+
+  # ==========================================================
+  # FLASK SERVER 3
+  # ==========================================================
+
+  app3:
+
+    build: .
+
+    container_name: streamflix-app3
+
+    restart: unless-stopped
+
+    environment:
+
+      SERVER_ID: SERVER-3
+
+      DB_HOST: mysql
+
+      DB_PORT: 3306
+
+      DB_USER: streamflix
+
+      DB_PASSWORD: streamflix_password
+
+      DB_NAME: streamflix
+
+      SECRET_KEY: streamflix-development-secret
+
+    depends_on:
+
+      mysql:
+        condition: service_healthy
+
+
+  # ==========================================================
+  # NGINX LOAD BALANCER
+  # ==========================================================
+
+  nginx:
+
+    image: nginx:alpine
+
+    container_name: streamflix-nginx
+
+    restart: unless-stopped
+
+    ports:
+
+      - "8080:80"
+
+    volumes:
+
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+
+      - app1
+
+      - app2
+
+      - app3
+
+
+# ============================================================
+# VOLUMES
+# ============================================================
 
 volumes:
 
   mysql_data:
+

@@ -3,6 +3,8 @@ from flask import Flask, render_template, jsonify
 from database.db import get_connection
 
 
+SERVER_ID = os.getenv("SERVER_ID", "LOCAL")
+
 app = Flask(__name__)
 
 
@@ -159,3 +161,4 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
