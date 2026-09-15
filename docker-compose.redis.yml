@@ -1,0 +1,59 @@
+services:
+
+  redis:
+
+    image: redis:7-alpine
+
+    container_name: streamflix-redis
+
+    restart: unless-stopped
+
+    command: redis-server --appendonly yes
+
+    volumes:
+
+      - redis_data:/data
+
+
+  app1:
+
+    environment:
+
+      REDIS_HOST: redis
+
+      REDIS_PORT: 6379
+
+    depends_on:
+
+      - redis
+
+
+  app2:
+
+    environment:
+
+      REDIS_HOST: redis
+
+      REDIS_PORT: 6379
+
+    depends_on:
+
+      - redis
+
+
+  app3:
+
+    environment:
+
+      REDIS_HOST: redis
+
+      REDIS_PORT: 6379
+
+    depends_on:
+
+      - redis
+
+
+volumes:
+
+  redis_data:

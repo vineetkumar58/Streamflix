@@ -17,7 +17,7 @@ from werkzeug.security import (
 
 from database.db import get_connection
 
-from config import Config
+from config import Config`r`n`r`nfrom services.cache import (`r`n    redis_client,`r`n    get_cache,`r`n    set_cache,`r`n    delete_cache`r`n)
 
 
 SERVER_ID = os.getenv("SERVER_ID", "LOCAL")
@@ -71,8 +71,35 @@ def server_identity():
 @app.route("/api/movies")
 def get_movies():
 
+    cache_key = "movies:all"
+
+    # ========================================================
+    # CHECK REDIS
+    # ========================================================
+
+    cached_movies = get_cache(cache_key)
+
+    if cached_movies is not None:
+
+        return jsonify({
+
+            "source": "redis",
+
+            "server": SERVER_ID,
+
+            "movies": cached_movies
+
+        })
+
+
+    # ========================================================
+    # CACHE MISS -> MYSQL
+    # ========================================================
+
     connection = None
+
     cursor = None
+
 
     try:
 
@@ -81,6 +108,7 @@ def get_movies():
         cursor = connection.cursor(
             dictionary=True
         )
+
 
         cursor.execute(
             """
@@ -95,25 +123,101 @@ def get_movies():
             """
         )
 
+
         movies = cursor.fetchall()
 
-        return jsonify(movies)
+
+        # ====================================================
+        # SAVE RESULT TO REDIS
+        # ====================================================
+
+        set_cache(
+
+            cache_key,
+
+            movies,
+
+            expiration=60
+
+        )
+
+
+        return jsonify({
+
+            "source": "mysql",
+
+            "server": SERVER_ID,
+
+            "movies": movies
+
+        })
+
 
     except Exception as error:
 
-        print("Movie database error:", error)
+        print(
+            "Movie database error:",
+            error
+        )
+
 
         return jsonify({
+
             "error": "Unable to fetch movies"
+
         }), 500
+
 
     finally:
 
         if cursor:
+
             cursor.close()
 
+
         if connection:
+
             connection.close()
+
+
+@app.route("/api/cache")
+def cache_status():
+
+    try:
+
+        keys = redis_client.keys("*")
+
+        return jsonify({
+
+            "redis": "connected",
+
+            "keys": keys
+
+        })
+
+    except Exception as error:
+
+        return jsonify({
+
+            "redis": "disconnected",
+
+            "error": str(error)
+
+        }), 503
+
+
+@app.route("/api/cache/clear")
+def clear_cache():
+
+    delete_cache("movies:all")
+
+    return jsonify({
+
+        "message": "Movie cache cleared",
+
+        "server": SERVER_ID
+
+    })
 
 
 @app.route("/api/movies/<int:movie_id>")
@@ -449,3 +553,4 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
