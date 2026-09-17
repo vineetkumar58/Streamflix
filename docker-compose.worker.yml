@@ -1,0 +1,16 @@
+services:
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: streamflix-worker
+    command: ["python", "worker/worker.py"]
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: streamflix
+      RABBITMQ_PASSWORD: streamflix_password
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped

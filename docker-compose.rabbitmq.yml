@@ -1,0 +1,44 @@
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: streamflix-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: streamflix
+      RABBITMQ_DEFAULT_PASS: streamflix_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  app1:
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: streamflix
+      RABBITMQ_PASSWORD: streamflix_password
+    depends_on:
+      - rabbitmq
+
+  app2:
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: streamflix
+      RABBITMQ_PASSWORD: streamflix_password
+    depends_on:
+      - rabbitmq
+
+  app3:
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: streamflix
+      RABBITMQ_PASSWORD: streamflix_password
+    depends_on:
+      - rabbitmq
+
+volumes:
+  rabbitmq_data:
