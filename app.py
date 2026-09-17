@@ -15,9 +15,18 @@ from werkzeug.security import (
     check_password_hash
 )
 
+from services.queue import publish_message
+
 from database.db import get_connection
 
-from config import Config`r`n`r`nfrom services.cache import (`r`n    redis_client,`r`n    get_cache,`r`n    set_cache,`r`n    delete_cache`r`n)
+from config import Config
+
+from services.cache import (
+    redis_client,
+    get_cache,
+    set_cache,
+    delete_cache
+)
 
 
 SERVER_ID = os.getenv("SERVER_ID", "LOCAL")
@@ -518,6 +527,25 @@ def current_user():
     })
 
 
+
+@app.route("/api/jobs", methods=["POST"])
+def create_job():
+    data = request.get_json(silent=True) or {}
+
+    job = {
+        "type": data.get("type", "test"),
+        "message": data.get("message", "Hello from StreamFlix"),
+        "server": SERVER_ID
+    }
+
+    publish_message("streamflix_jobs", job)
+
+    return jsonify({
+        "status": "queued",
+        "server": SERVER_ID,
+        "job": job
+    }), 202
+
 @app.route("/health")
 def health():
 
@@ -553,4 +581,8 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
+
+
+
 
