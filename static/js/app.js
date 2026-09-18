@@ -1,74 +1,49 @@
-console.log("StreamFlix frontend loaded");
-
-
 async function loadMovies() {
-
     try {
-
         const response = await fetch("/api/movies");
 
         if (!response.ok) {
-            throw new Error("Failed to fetch movies");
+            throw new Error("Failed to load movies");
         }
 
-        const movies = await response.json();
+        const data = await response.json();
 
-        const movieGrid =
-            document.getElementById("movie-grid");
+        const movies = Array.isArray(data) ? data : data.movies;
 
-        movieGrid.innerHTML = "";
+        const container = document.getElementById("movies-container");
 
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = "";
 
         movies.forEach(movie => {
+            const card = document.createElement("div");
+            card.className = "movie-card";
 
-            const movieCard =
-                document.createElement("div");
-
-            movieCard.className = "movie-card";
-
-
-            movieCard.innerHTML = `
-
-                <div class="poster">
-
-                    ${movie.title}
-
+            card.innerHTML = `
+                <div class="movie-info">
+                    <h3>${movie.title}</h3>
+                    <p>${movie.genre || "Unknown genre"}</p>
+                    <p>${movie.release_year || ""}</p>
+                    <p>${movie.description || ""}</p>
                 </div>
-
-                <h3>
-                    ${movie.title}
-                </h3>
-
-                <p class="movie-info">
-
-                    ${movie.genre} • ${movie.year}
-
-                </p>
-
             `;
 
-
-            movieGrid.appendChild(movieCard);
-
+            container.appendChild(card);
         });
 
+    } catch (error) {
+        console.error("Movie loading error:", error);
+
+        const container = document.getElementById("movies-container");
+
+        if (container) {
+            container.innerHTML =
+                "<p>Unable to load movies.</p>";
+        }
     }
-
-    catch (error) {
-
-        console.error(error);
-
-        document.getElementById("movie-grid").innerHTML = `
-
-            <p>
-                Failed to load movies.
-            </p>
-
-        `;
-
-    }
-
 }
 
-
-loadMovies();
+document.addEventListener("DOMContentLoaded", loadMovies);
