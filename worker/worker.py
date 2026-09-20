@@ -2,21 +2,31 @@ import json
 import os
 import time
 import pika
+import mysql.connector
 
-HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")
-PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
-USER = os.getenv("RABBITMQ_USER", "streamflix")
-PASSWORD = os.getenv("RABBITMQ_PASSWORD", "streamflix_password")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
+RABBITMQ_USER = os.getenv("RABBITMQ_USER", "streamflix")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "streamflix_password")
+
+DB_HOST = os.getenv("DB_HOST", "mysql")
+DB_PORT = int(os.getenv("DB_PORT", "3306"))
+DB_USER = os.getenv("DB_USER", "streamflix")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "streamflix_password")
+DB_NAME = os.getenv("DB_NAME", "streamflix")
 
 QUEUE = "streamflix_jobs"
 
 
 def connect_to_rabbitmq():
-    credentials = pika.PlainCredentials(USER, PASSWORD)
+    credentials = pika.PlainCredentials(
+        RABBITMQ_USER,
+        RABBITMQ_PASSWORD
+    )
 
     parameters = pika.ConnectionParameters(
-        host=HOST,
-        port=PORT,
+        host=RABBITMQ_HOST,
+        port=RABBITMQ_PORT,
         credentials=credentials,
         heartbeat=60,
         blocked_connection_timeout=30
@@ -24,7 +34,11 @@ def connect_to_rabbitmq():
 
     while True:
         try:
-            print(f"Connecting to RabbitMQ at {HOST}:{PORT}...", flush=True)
+            print(
+                f"Connecting to RabbitMQ at "
+                f"{RABBITMQ_HOST}:{RABBITMQ_PORT}...",
+                flush=True
+            )
 
             connection = pika.BlockingConnection(parameters)
 
@@ -41,29 +55,95 @@ def connect_to_rabbitmq():
             time.sleep(5)
 
 
+def get_db_connection():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
+    )
+
+
+def process_movie_job(message):
+    movie_id = message.get("movie_id")
+
+    if not movie_id:
+        raise ValueError("movie_id is required")
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT id, title, genre, release_year "
+        "FROM movies WHERE id = %s",
+        (movie_id,)
+    )
+
+    movie = cursor.fetchone()
+
+    if not movie:
+        cursor.close()
+        connection.close()
+        raise ValueError(f"Movie {movie_id} not found")
+
+    print(
+        f"Processing movie: {movie['title']} "
+        f"(ID: {movie['id']})",
+        flush=True
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO job_logs
+        (job_type, movie_id, status, message)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (
+            message.get("type", "movie_processing"),
+            movie_id,
+            "completed",
+            f"Processed movie: {movie['title']}"
+        )
+    )
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    print(
+        f"Movie {movie_id} processed successfully.",
+        flush=True
+    )
+
+
 def process_message(ch, method, properties, body):
     try:
         message = json.loads(body)
 
-        print("Received job:", flush=True)
-        print(message, flush=True)
+        print(
+            f"Received job: {message}",
+            flush=True
+        )
 
-        print("Processing job...", flush=True)
-
-        # Background processing will go here later.
-
-        print("Job completed.", flush=True)
+        process_movie_job(message)
 
         ch.basic_ack(
             delivery_tag=method.delivery_tag
         )
 
+        print("Job acknowledged.", flush=True)
+
     except Exception as error:
-        print(f"Job processing failed: {error}", flush=True)
+        print(
+            f"Job processing failed: {error}",
+            flush=True
+        )
 
         ch.basic_nack(
             delivery_tag=method.delivery_tag,
-            requeue=True
+            requeue=False
         )
 
 

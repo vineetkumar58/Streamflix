@@ -11,6 +11,12 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: streamflix
       RABBITMQ_PASSWORD: streamflix_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: streamflix
+      DB_PASSWORD: streamflix_password
+      DB_NAME: streamflix
     depends_on:
       - rabbitmq
+      - mysql
     restart: unless-stopped

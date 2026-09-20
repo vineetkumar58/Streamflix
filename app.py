@@ -535,6 +535,7 @@ def create_job():
     job = {
         "type": data.get("type", "test"),
         "message": data.get("message", "Hello from StreamFlix"),
+        "movie_id": data.get("movie_id"),
         "server": SERVER_ID
     }
 
@@ -545,6 +546,7 @@ def create_job():
         "server": SERVER_ID,
         "job": job
     }), 202
+
 
 @app.route("/health")
 def health():
