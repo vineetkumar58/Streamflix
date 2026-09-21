@@ -68,6 +68,8 @@ def get_db_connection():
 def process_movie_job(message):
     movie_id = message.get("movie_id")
 
+    if not movie_id:
+        raise ValueError("movie_id is required")
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
