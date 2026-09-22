@@ -37,6 +37,17 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 
+def get_current_user():
+
+    if "user_id" not in session:
+
+        return None
+
+    return {
+        "id": session["user_id"],
+        "name": session["user_name"],
+        "email": session["user_email"]
+    }
 
 
 @app.route("/")
